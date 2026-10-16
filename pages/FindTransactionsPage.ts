@@ -34,11 +34,13 @@ export class FindTransactionsPage extends BasePage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto('/findtrans.htm');
+    await this.page.goto('findtrans.htm');
     await expect(
       this.page.getByRole('heading', { name: 'Find Transactions' }),
       'Find Transactions heading should be visible',
     ).toBeVisible();
+    // Result / error panels also contain h1.title nodes; wait for the form container instead.
+    await expect(this.page.locator('#formContainer, #transactionForm').first()).toBeVisible();
   }
 
   async waitForAccountsLoaded(): Promise<void> {

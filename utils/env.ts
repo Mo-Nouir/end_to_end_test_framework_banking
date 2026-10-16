@@ -11,7 +11,10 @@ function optional(name: string): string | undefined {
 }
 
 export const env = {
-  baseUrl: optional('BASE_URL') ?? 'https://parabank.parasoft.com/parabank',
+  baseUrl: (() => {
+    const value = optional('BASE_URL') ?? 'https://parabank.parasoft.com/parabank';
+    return value.endsWith('/') ? value : `${value}/`;
+  })(),
   apiBaseUrl:
     optional('API_BASE_URL') ?? 'https://parabank.parasoft.com/parabank/services/bank',
   testUsername: optional('TEST_USERNAME'),

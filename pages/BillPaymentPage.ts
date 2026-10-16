@@ -33,7 +33,7 @@ export class BillPaymentPage extends BasePage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto('/billpay.htm');
+    await this.page.goto('billpay.htm');
     await expect(
       this.page.getByRole('heading', { name: 'Bill Payment Service' }),
       'Bill Payment Service heading should be visible',

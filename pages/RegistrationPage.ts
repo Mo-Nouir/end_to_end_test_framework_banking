@@ -35,8 +35,8 @@ export class RegistrationPage extends BasePage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto('/register.htm');
-    await expect(this.form, 'Registration form should be visible').toBeVisible();
+    await this.page.goto('register.htm', { waitUntil: 'domcontentloaded' });
+    await expect(this.form, 'Registration form should be visible').toBeVisible({ timeout: 30_000 });
   }
 
   async fill(user: UserRegistrationData): Promise<void> {

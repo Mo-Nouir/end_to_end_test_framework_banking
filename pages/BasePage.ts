@@ -1,7 +1,7 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 
 export abstract class BasePage {
-  constructor(protected readonly page: Page) {}
+  constructor(readonly page: Page) {}
 
   readonly leftNav = {
     openNewAccount: () => this.page.getByRole('link', { name: 'Open New Account' }),

@@ -17,7 +17,7 @@ export class LoginPage extends BasePage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto('/index.htm');
+    await this.page.goto('index.htm');
   }
 
   async login(credentials: Credentials): Promise<void> {

@@ -22,7 +22,7 @@ export class TransferFundsPage extends BasePage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto('/transfer.htm');
+    await this.page.goto('transfer.htm');
     await expect(
       this.page.getByRole('heading', { name: 'Transfer Funds' }),
       'Transfer Funds heading should be visible',

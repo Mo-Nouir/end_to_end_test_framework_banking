@@ -3,9 +3,13 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const baseURL = process.env.BASE_URL ?? 'https://parabank.parasoft.com/parabank';
+// Trailing slash matters: goto('index.htm') resolves under /parabank/.
+// A leading slash in page.goto('/index.htm') would drop the /parabank path segment.
+const configuredBase = process.env.BASE_URL ?? 'https://parabank.parasoft.com/parabank';
+const baseURL = configuredBase.endsWith('/') ? configuredBase : `${configuredBase}/`;
 const isCI = !!process.env.CI;
-const workers = process.env.WORKERS ? Number(process.env.WORKERS) : isCI ? 2 : undefined;
+// Default to 1 worker against the shared Cloudflare-fronted demo to reduce 1015 rate limits.
+const workers = process.env.WORKERS ? Number(process.env.WORKERS) : 1;
 
 export default defineConfig({
   testDir: './tests',

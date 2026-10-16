@@ -23,7 +23,12 @@ type Pages = {
 type AuthFixtures = {
   /** Registers a unique user via UI and leaves the browser authenticated. */
   registeredUser: UserRegistrationData;
-  /** Authenticated page objects for a freshly registered user with >= 2 accounts when possible. */
+  /**
+   * Logs in as the public demo user (john/demo).
+   * Shared mutable state — use for multi-account flows; avoid exclusive assumptions.
+   */
+  demoAuthenticated: Credentials;
+  /** Authenticated page for a freshly registered user; opens a second account when possible. */
   authenticatedUser: {
     user: UserRegistrationData;
     credentials: Credentials;
@@ -58,6 +63,12 @@ export const test = base.extend<Pages & AuthFixtures>({
     await registrationPage.register(user);
     await registrationPage.expectSuccessfulRegistration(user.username);
     await use(user);
+  },
+  demoAuthenticated: async ({ loginPage }, use) => {
+    const credentials = TestDataFactory.sharedDemoCredentials();
+    await loginPage.goto();
+    await loginPage.loginExpectingSuccess(credentials);
+    await use(credentials);
   },
   authenticatedUser: async ({ registrationPage, accountsPage }, use) => {
     const user = TestDataFactory.createUser();

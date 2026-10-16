@@ -14,8 +14,8 @@ concurrency:
 env:
   BASE_URL: https://parabank.parasoft.com/parabank
   API_BASE_URL: https://parabank.parasoft.com/parabank/services/bank
-  # Keep concurrency low against the shared public demo
-  WORKERS: '2'
+  # Keep concurrency very low against the shared Cloudflare-fronted demo
+  WORKERS: '1'
   CI: 'true'
 
 jobs:

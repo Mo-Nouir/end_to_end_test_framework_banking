@@ -18,7 +18,7 @@ export class AccountsPage extends BasePage {
   }
 
   async gotoOverview(): Promise<void> {
-    await this.page.goto('/overview.htm');
+    await this.page.goto('overview.htm');
     await expect(
       this.page.getByRole('heading', { name: 'Accounts Overview' }),
       'Accounts Overview heading should be visible',
@@ -26,7 +26,7 @@ export class AccountsPage extends BasePage {
   }
 
   async gotoOpenAccount(): Promise<void> {
-    await this.page.goto('/openaccount.htm');
+    await this.page.goto('openaccount.htm');
     await expect(
       this.page.getByRole('heading', { name: 'Open New Account' }),
       'Open New Account heading should be visible',

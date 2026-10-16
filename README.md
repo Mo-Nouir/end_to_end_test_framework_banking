@@ -173,6 +173,8 @@ Manual runs are supported via `workflow_dispatch`.
 - Form accessibility is limited (few proper labels); locators combine roles with stable `name` / `id` attributes verified against the live DOM.
 - Insufficient-funds behavior is not always deterministic on the shared instance; transfer tests skip when fewer than two funded accounts exist.
 - Do not treat demo credentials as secrets or exclusive test accounts.
+- Cloudflare may return **Error 1015 (rate limited)** under parallel load. Default `WORKERS=1`; avoid hammering the public host.
+- Relative navigation must not use a leading `/` with this base URL, or Playwright resolves to `https://parabank.parasoft.com/index.htm` (404) instead of `/parabank/index.htm`.
 
 ## Troubleshooting
 
@@ -182,7 +184,9 @@ Manual runs are supported via `workflow_dispatch`.
 | Registration “username already exists” | Factory collision is rare; re-run the test |
 | Transfer skipped | Newly registered user could not open a second account (balance/demo issue) |
 | API 500 / flaky responses | Shared demo instability; CI retries are enabled |
+| Cloudflare Error 1015 | Wait a few minutes; rerun with `WORKERS=1` |
 | Browsers missing | `npx playwright install` (add `--with-deps` on Linux) |
+| UI 404 on `/index.htm` | Ensure `BASE_URL` ends with `/parabank/` and navigations omit a leading `/` |
 
 ## Future improvements
 
