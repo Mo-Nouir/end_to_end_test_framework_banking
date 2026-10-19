@@ -1,8 +1,9 @@
 import { test, expect, TestDataFactory } from '../../fixtures/test-fixtures';
 
 /**
- * Lean smoke suite for CI: home page, registration, login, overview, and a read API check.
+ * Lean smoke suite for CI: home page, registration, login, overview, and API check.
  * Selected via the `@smoke` tag / smoke project.
+ * Avoids shared john/demo for API smoke — uses a freshly registered user instead.
  */
 test.describe('Smoke', () => {
   test('home page loads with login form', { tag: '@smoke' }, async ({ page, loginPage }) => {
@@ -27,12 +28,16 @@ test.describe('Smoke', () => {
   );
 
   test(
-    'API login and account list for demo customer',
+    'API login and account list for a registered user',
     { tag: '@smoke' },
-    async ({ apiClient }) => {
-      const demo = TestDataFactory.sharedDemoCredentials();
-      const { response, customer } = await apiClient.login(demo.username, demo.password);
-      expect(response.status()).toBe(200);
+    async ({ registrationPage, apiClient }) => {
+      const user = TestDataFactory.createUser();
+      await registrationPage.goto();
+      await registrationPage.register(user);
+      await registrationPage.expectSuccessfulRegistration(user.username);
+
+      const { response, customer } = await apiClient.login(user.username, user.password);
+      expect(response.status(), 'API login for newly registered user should succeed').toBe(200);
       expect(customer.id).toBeGreaterThan(0);
 
       const accounts = await apiClient.getAccounts(customer.id);

@@ -70,9 +70,9 @@ export class RegistrationPage extends BasePage {
       'Successful registration should authenticate the user',
     ).toBeVisible({ timeout: 30_000 });
     await expect(
-      this.titleHeading(),
+      this.page.getByRole('heading', { name: new RegExp(`Welcome\\s+${username}`, 'i') }),
       'Registration success heading should include the new username',
-    ).toContainText(`Welcome ${username}`, { timeout: 15_000 });
+    ).toBeVisible({ timeout: 15_000 });
   }
 
   async expectFieldErrors(): Promise<void> {

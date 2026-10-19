@@ -20,17 +20,21 @@ test.describe('Authentication', () => {
     },
   );
 
-  test('shows error for invalid username or password', async ({ loginPage }) => {
+  test('shows error for invalid username or password', async ({ page, loginPage }) => {
+    await page.context().clearCookies();
     await loginPage.goto();
+    await expect(loginPage.usernameInput).toBeVisible();
     await loginPage.login({
-      username: 'definitely-not-a-real-user',
+      username: `invalid_user_${Date.now()}`,
       password: 'wrong-password',
     });
     await loginPage.expectInvalidCredentialsError();
   });
 
-  test('shows error when username and password are empty', async ({ loginPage }) => {
+  test('shows error when username and password are empty', async ({ page, loginPage }) => {
+    await page.context().clearCookies();
     await loginPage.goto();
+    await expect(loginPage.usernameInput).toBeVisible();
     await loginPage.loginButton.click();
     await loginPage.expectEmptyCredentialsError();
   });

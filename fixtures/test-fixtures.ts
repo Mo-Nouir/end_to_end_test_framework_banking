@@ -43,6 +43,24 @@ type AuthFixtures = {
   authenticatedUser: AuthenticatedUser;
 };
 
+async function registerUniqueUser(registrationPage: RegistrationPage): Promise<UserRegistrationData> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    const user = TestDataFactory.createUser();
+    try {
+      await registrationPage.goto();
+      await registrationPage.register(user);
+      await registrationPage.expectSuccessfulRegistration(user.username);
+      return user;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError instanceof Error
+    ? lastError
+    : new Error('Registration failed after retry against the public demo');
+}
+
 async function ensureTwoAccounts(
   apiClient: ParaBankApiClient,
   credentials: Credentials,
@@ -101,10 +119,7 @@ export const test = base.extend<Pages & AuthFixtures>({
     await use(new ParaBankApiClient(request));
   },
   registeredUser: async ({ registrationPage }, use) => {
-    const user = TestDataFactory.createUser();
-    await registrationPage.goto();
-    await registrationPage.register(user);
-    await registrationPage.expectSuccessfulRegistration(user.username);
+    const user = await registerUniqueUser(registrationPage);
     await use(user);
   },
   demoAuthenticated: async ({ loginPage }, use) => {
@@ -127,11 +142,8 @@ export const test = base.extend<Pages & AuthFixtures>({
       await loginPage.goto();
       await loginPage.loginExpectingSuccess(credentials);
     } else {
-      user = TestDataFactory.createUser();
+      user = await registerUniqueUser(registrationPage);
       credentials = { username: user.username, password: user.password };
-      await registrationPage.goto();
-      await registrationPage.register(user);
-      await registrationPage.expectSuccessfulRegistration(user.username);
     }
 
     const accountIds = await ensureTwoAccounts(apiClient, credentials);

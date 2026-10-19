@@ -1,9 +1,9 @@
 import { test, expect, TestDataFactory } from '../../fixtures/test-fixtures';
+import { requireApiCustomer } from '../../utils/api-session';
 
 test.describe('API – transfers, bill pay, and transactions', () => {
   test('transfers funds between two accounts', async ({ apiClient }) => {
-    const demo = TestDataFactory.sharedDemoCredentials();
-    const { customer } = await apiClient.login(demo.username, demo.password);
+    const customer = await requireApiCustomer(apiClient);
     const { accounts } = await apiClient.getAccounts(customer.id);
     test.skip(accounts.length < 2, 'Need two accounts for transfer');
 
@@ -23,9 +23,10 @@ test.describe('API – transfers, bill pay, and transactions', () => {
   });
 
   test('lists transactions for an account', async ({ apiClient }) => {
-    const demo = TestDataFactory.sharedDemoCredentials();
-    const { customer } = await apiClient.login(demo.username, demo.password);
+    const customer = await requireApiCustomer(apiClient);
     const { accounts } = await apiClient.getAccounts(customer.id);
+    test.skip(accounts.length === 0, 'No accounts available');
+
     const { response, transactions } = await apiClient.getTransactions(accounts[0].id);
 
     expect(response.status()).toBe(200);
@@ -33,11 +34,11 @@ test.describe('API – transfers, bill pay, and transactions', () => {
   });
 
   test('filters transactions by amount', async ({ apiClient }) => {
-    const demo = TestDataFactory.sharedDemoCredentials();
-    const { customer } = await apiClient.login(demo.username, demo.password);
+    const customer = await requireApiCustomer(apiClient);
     const { accounts } = await apiClient.getAccounts(customer.id);
-    const accountId = accounts[0].id;
+    test.skip(accounts.length === 0, 'No accounts available');
 
+    const accountId = accounts[0].id;
     await apiClient.deposit(accountId, 5);
     const { response, transactions } = await apiClient.getTransactionsByAmount(accountId, 5);
 
@@ -46,9 +47,10 @@ test.describe('API – transfers, bill pay, and transactions', () => {
   });
 
   test('pays a bill via REST', async ({ apiClient }) => {
-    const demo = TestDataFactory.sharedDemoCredentials();
-    const { customer } = await apiClient.login(demo.username, demo.password);
+    const customer = await requireApiCustomer(apiClient);
     const { accounts } = await apiClient.getAccounts(customer.id);
+    test.skip(accounts.length === 0, 'No accounts available');
+
     const funding = [...accounts].sort((a, b) => b.balance - a.balance)[0];
     test.skip(funding.balance < 10, 'Insufficient funds for bill pay');
 

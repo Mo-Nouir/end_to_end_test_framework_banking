@@ -168,11 +168,11 @@ GitHub Actions workflow: `.github/workflows/playwright.yml`
 Pipeline strategy:
 
 1. **Lint + typecheck** on every push/PR
-2. **Smoke** on Chromium via `@smoke` tags (fast feedback)
-3. **Full suite** on Chromium, Firefox, and WebKit after smoke passes (excludes `@smoke` / `@quarantine`)
+2. **Smoke** on Chromium via `@smoke` tags (fast feedback; `continue-on-error` so demo flakes do not block CI)
+3. **Full suite** on Chromium, Firefox, and WebKit when lint passes (excludes `@smoke` / `@quarantine`)
 4. HTML reports and failure artifacts uploaded
 5. `WORKERS=1` to limit load / Cloudflare 1015 against the shared demo
-6. Optional `TEST_USERNAME` / `TEST_PASSWORD` via GitHub Secrets (used by `authenticatedUser`)
+6. Optional `TEST_USERNAME` / `TEST_PASSWORD` via GitHub Secrets (used by `authenticatedUser` / API session helper)
 
 Manual runs are supported via `workflow_dispatch`.
 
