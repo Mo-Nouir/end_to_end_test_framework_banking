@@ -7,6 +7,7 @@ import { TransferFundsPage } from '../pages/TransferFundsPage';
 import { BillPaymentPage } from '../pages/BillPaymentPage';
 import { FindTransactionsPage } from '../pages/FindTransactionsPage';
 import { TestDataFactory } from '../test-data/test-data.factory';
+import type { Account, Customer } from '../types/api.types';
 import type { Credentials, UserRegistrationData } from '../types/user.types';
 import { NewAccountType } from '../types/api.types';
 import { env } from '../utils/env';
@@ -28,6 +29,13 @@ type AuthenticatedUser = {
   accountIds: string[];
 };
 
+/** Worker-scoped API identity: unique registered user with funded accounts. */
+export type ApiSession = {
+  customer: Customer;
+  credentials: Credentials;
+  accounts: Account[];
+};
+
 type AuthFixtures = {
   /** Registers a unique user via UI and leaves the browser authenticated. */
   registeredUser: UserRegistrationData;
@@ -41,6 +49,14 @@ type AuthFixtures = {
    * Ensures at least two accounts via REST setup for transfer scenarios.
    */
   authenticatedUser: AuthenticatedUser;
+};
+
+type WorkerAuthFixtures = {
+  /**
+   * Registers (or uses TEST_*) once per worker, then API-logins and ensures
+   * two funded accounts. Avoids shared john/demo for API suites.
+   */
+  apiSession: ApiSession;
 };
 
 async function registerUniqueUser(registrationPage: RegistrationPage): Promise<UserRegistrationData> {
@@ -64,12 +80,13 @@ async function registerUniqueUser(registrationPage: RegistrationPage): Promise<U
 async function ensureTwoAccounts(
   apiClient: ParaBankApiClient,
   credentials: Credentials,
-): Promise<string[]> {
+): Promise<Account[]> {
   const { response: loginResponse, customer } = await apiClient.login(
     credentials.username,
     credentials.password,
   );
   expect(loginResponse.ok(), 'API login required for account setup').toBeTruthy();
+  expect(customer?.id, 'API login should return a customer id').toBeGreaterThan(0);
 
   let { accounts } = await apiClient.getAccounts(customer.id);
   expect(accounts.length, 'Customer should have at least one account').toBeGreaterThan(0);
@@ -89,11 +106,18 @@ async function ensureTwoAccounts(
     ({ accounts } = await apiClient.getAccounts(customer.id));
   }
 
+  const richest = [...accounts].sort((a, b) => b.balance - a.balance)[0];
+  if (richest.balance < 100) {
+    const deposit = await apiClient.deposit(richest.id, 500);
+    expect(deposit.response.ok(), 'Deposit should fund API mutation tests').toBeTruthy();
+    ({ accounts } = await apiClient.getAccounts(customer.id));
+  }
+
   expect(accounts.length, 'Need at least two accounts for transfer-ready users').toBeGreaterThan(1);
-  return accounts.map((account) => String(account.id));
+  return accounts;
 }
 
-export const test = base.extend<Pages & AuthFixtures>({
+export const test = base.extend<Pages & AuthFixtures, WorkerAuthFixtures>({
   page: async ({ page }, use) => {
     await use(withRateLimitGuard(page));
   },
@@ -146,9 +170,48 @@ export const test = base.extend<Pages & AuthFixtures>({
       credentials = { username: user.username, password: user.password };
     }
 
-    const accountIds = await ensureTwoAccounts(apiClient, credentials);
-    await use({ user, credentials, accountIds });
+    const accounts = await ensureTwoAccounts(apiClient, credentials);
+    await use({
+      user,
+      credentials,
+      accountIds: accounts.map((account) => String(account.id)),
+    });
   },
+  apiSession: [
+    async ({ playwright }, use) => {
+      const requestContext = await playwright.request.newContext();
+      const apiClient = new ParaBankApiClient(requestContext);
+      let credentials: Credentials;
+
+      if (env.testUsername && env.testPassword) {
+        credentials = { username: env.testUsername, password: env.testPassword };
+      } else {
+        // UI registration only needs a browser once per worker; Chromium is enough.
+        const browser = await playwright.chromium.launch();
+        const page = withRateLimitGuard(
+          await browser.newPage({
+            baseURL: env.baseUrl,
+          }),
+        );
+        const registrationPage = new RegistrationPage(page);
+        const user = await registerUniqueUser(registrationPage);
+        credentials = { username: user.username, password: user.password };
+        await browser.close();
+      }
+
+      const accounts = await ensureTwoAccounts(apiClient, credentials);
+      const { response, customer } = await apiClient.login(
+        credentials.username,
+        credentials.password,
+      );
+      expect(response.ok(), 'apiSession API login should succeed').toBeTruthy();
+      expect(customer?.id).toBeGreaterThan(0);
+
+      await use({ customer, credentials, accounts });
+      await requestContext.dispose();
+    },
+    { scope: 'worker' },
+  ],
 });
 
 export { expect, TestDataFactory, NewAccountType };

@@ -15,6 +15,7 @@
     "test:webkit": "playwright test --project=webkit",
     "test:quarantine": "playwright test --grep @quarantine",
     "report": "playwright show-report",
+    "report:merge": "playwright merge-reports --reporter html ./all-blob-reports",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",

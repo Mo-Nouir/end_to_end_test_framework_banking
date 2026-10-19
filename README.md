@@ -170,10 +170,10 @@ Pipeline strategy:
 1. **Lint + typecheck** on every push/PR
 2. **Smoke** on Chromium via `@smoke` tags (fast feedback; `continue-on-error` so demo flakes do not block CI)
 3. **Full suite** on Chromium, Firefox, and WebKit when lint passes (excludes `@smoke` / `@quarantine`)
-4. HTML reports and failure artifacts uploaded
-5. **GitHub Pages** publishes the latest Chromium Playwright HTML report on pushes to `main`
+4. Blob reports uploaded per job; failure artifacts on failed runs
+5. **GitHub Pages** publishes a **merged** HTML report (Chromium + Firefox + WebKit + smoke) on pushes to `main`
 6. `WORKERS=1` to limit load / Cloudflare 1015 against the shared demo
-7. Optional `TEST_USERNAME` / `TEST_PASSWORD` via GitHub Secrets (used by `authenticatedUser` / API session helper)
+7. Optional `TEST_USERNAME` / `TEST_PASSWORD` via GitHub Secrets (used by `authenticatedUser` / `apiSession`)
 
 Manual runs are supported via `workflow_dispatch`.
 
@@ -189,7 +189,7 @@ One-time setup in the repo:
 2. **Source:** GitHub Actions
 3. Re-run the workflow (or push to `main`) and approve the `github-pages` environment if prompted
 
-The live site always shows the **latest Chromium** report from `main` (falls back to the smoke report if Chromium artifacts are missing). PR runs do not overwrite the published site.
+The live site shows the **merged** Playwright HTML report from `main` (all browser projects + smoke in one view). Filter by project in the report UI. PR runs do not overwrite the published site.
 
 ## Known limitations of the public demo
 

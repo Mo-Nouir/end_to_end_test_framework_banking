@@ -1,16 +1,13 @@
 import { test, expect, TestDataFactory } from '../../fixtures/test-fixtures';
-import { requireApiCustomer } from '../../utils/api-session';
 
 test.describe('API – transfers, bill pay, and transactions', () => {
-  test('transfers funds between two accounts', async ({ apiClient }) => {
-    const customer = await requireApiCustomer(apiClient);
-    const { accounts } = await apiClient.getAccounts(customer.id);
-    test.skip(accounts.length < 2, 'Need two accounts for transfer');
+  test('transfers funds between two accounts', async ({ apiClient, apiSession }) => {
+    expect(apiSession.accounts.length, 'Need two accounts for transfer').toBeGreaterThanOrEqual(2);
 
-    const sorted = [...accounts].sort((a, b) => b.balance - a.balance);
+    const sorted = [...apiSession.accounts].sort((a, b) => b.balance - a.balance);
     const from = sorted[0];
     const to = sorted[1];
-    test.skip(from.balance < 1, 'Insufficient funds on source account');
+    expect(from.balance, 'Source account should be funded').toBeGreaterThanOrEqual(1);
 
     const amount = 1;
     const { response, message } = await apiClient.transfer(from.id, to.id, amount);
@@ -22,23 +19,15 @@ test.describe('API – transfers, bill pay, and transactions', () => {
     expect(fromAfter.balance).toBeLessThanOrEqual(from.balance);
   });
 
-  test('lists transactions for an account', async ({ apiClient }) => {
-    const customer = await requireApiCustomer(apiClient);
-    const { accounts } = await apiClient.getAccounts(customer.id);
-    test.skip(accounts.length === 0, 'No accounts available');
-
-    const { response, transactions } = await apiClient.getTransactions(accounts[0].id);
+  test('lists transactions for an account', async ({ apiClient, apiSession }) => {
+    const { response, transactions } = await apiClient.getTransactions(apiSession.accounts[0].id);
 
     expect(response.status()).toBe(200);
     expect(Array.isArray(transactions)).toBe(true);
   });
 
-  test('filters transactions by amount', async ({ apiClient }) => {
-    const customer = await requireApiCustomer(apiClient);
-    const { accounts } = await apiClient.getAccounts(customer.id);
-    test.skip(accounts.length === 0, 'No accounts available');
-
-    const accountId = accounts[0].id;
+  test('filters transactions by amount', async ({ apiClient, apiSession }) => {
+    const accountId = apiSession.accounts[0].id;
     await apiClient.deposit(accountId, 5);
     const { response, transactions } = await apiClient.getTransactionsByAmount(accountId, 5);
 
@@ -46,13 +35,9 @@ test.describe('API – transfers, bill pay, and transactions', () => {
     expect(Array.isArray(transactions)).toBe(true);
   });
 
-  test('pays a bill via REST', async ({ apiClient }) => {
-    const customer = await requireApiCustomer(apiClient);
-    const { accounts } = await apiClient.getAccounts(customer.id);
-    test.skip(accounts.length === 0, 'No accounts available');
-
-    const funding = [...accounts].sort((a, b) => b.balance - a.balance)[0];
-    test.skip(funding.balance < 10, 'Insufficient funds for bill pay');
+  test('pays a bill via REST', async ({ apiClient, apiSession }) => {
+    const funding = [...apiSession.accounts].sort((a, b) => b.balance - a.balance)[0];
+    expect(funding.balance, 'Funding account should cover bill pay').toBeGreaterThanOrEqual(10);
 
     const payeeData = TestDataFactory.createBillPayee({ amount: '5.00' });
     const { response, result } = await apiClient.billPay(funding.id, 5, {

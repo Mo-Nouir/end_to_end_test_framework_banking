@@ -21,10 +21,13 @@ export default defineConfig({
   expect: {
     timeout: 15_000,
   },
-  reporter: [
-    ['list'],
-    ['html', { open: 'never', outputFolder: 'playwright-report' }],
-  ],
+  // CI emits blob reports per shard/project so Jobs can merge Chromium+Firefox+WebKit (+ smoke).
+  reporter: isCI
+    ? [['list'], ['blob', { outputDir: 'blob-report' }]]
+    : [
+        ['list'],
+        ['html', { open: 'never', outputFolder: 'playwright-report' }],
+      ],
   use: {
     baseURL,
     headless: true,

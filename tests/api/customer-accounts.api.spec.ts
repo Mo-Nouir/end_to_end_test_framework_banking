@@ -1,15 +1,17 @@
 import { test, expect, TestDataFactory, NewAccountType } from '../../fixtures/test-fixtures';
-import { expectSuccessfulApiLogin, requireApiCustomer } from '../../utils/api-session';
 
 test.describe('API – customers and accounts', () => {
-  test('logs in via REST and returns customer details', async ({ apiClient }) => {
-    const demo = TestDataFactory.sharedDemoCredentials();
-    const { response, customer } = await apiClient.login(demo.username, demo.password);
-    const loggedIn = await expectSuccessfulApiLogin(response, customer);
+  test('logs in via REST and returns customer details', async ({ apiClient, apiSession }) => {
+    const { response, customer } = await apiClient.login(
+      apiSession.credentials.username,
+      apiSession.credentials.password,
+    );
 
+    expect(response.status(), 'API login for registered user should succeed').toBe(200);
     expect(response.headers()['content-type'] ?? '').toMatch(/json|xml/i);
-    expect(loggedIn.firstName).toBeTruthy();
-    expect(loggedIn.lastName).toBeTruthy();
+    expect(customer.id).toBe(apiSession.customer.id);
+    expect(customer.firstName).toBeTruthy();
+    expect(customer.lastName).toBeTruthy();
   });
 
   test('rejects invalid login credentials', async ({ apiClient }) => {
@@ -18,58 +20,62 @@ test.describe('API – customers and accounts', () => {
     expect([400, 401, 404, 500]).toContain(response.status());
   });
 
-  test('retrieves customer by id', async ({ apiClient }) => {
-    const loggedIn = await requireApiCustomer(apiClient);
-    const { response, customer } = await apiClient.getCustomer(loggedIn.id);
+  test('retrieves customer by id', async ({ apiClient, apiSession }) => {
+    const { response, customer } = await apiClient.getCustomer(apiSession.customer.id);
 
     expect(response.status()).toBe(200);
-    expect(customer.id).toBe(loggedIn.id);
+    expect(customer.id).toBe(apiSession.customer.id);
     expect(customer.address.city).toBeTruthy();
   });
 
-  test('lists accounts for a customer', async ({ apiClient }) => {
-    const customer = await requireApiCustomer(apiClient);
-    const { response, accounts } = await apiClient.getAccounts(customer.id);
+  test('lists accounts for a customer', async ({ apiClient, apiSession }) => {
+    const { response, accounts } = await apiClient.getAccounts(apiSession.customer.id);
 
     expect(response.status()).toBe(200);
     expect(accounts.length, 'Customer should have at least one account').toBeGreaterThan(0);
     expect(accounts[0]).toEqual(
       expect.objectContaining({
         id: expect.any(Number),
-        customerId: customer.id,
+        customerId: apiSession.customer.id,
         balance: expect.any(Number),
       }),
     );
   });
 
-  test('retrieves a single account by id', async ({ apiClient }) => {
-    const customer = await requireApiCustomer(apiClient);
-    const { accounts } = await apiClient.getAccounts(customer.id);
-    test.skip(accounts.length === 0, 'No accounts available for customer');
-
-    const { response, account } = await apiClient.getAccount(accounts[0].id);
+  test('retrieves a single account by id', async ({ apiClient, apiSession }) => {
+    const accountId = apiSession.accounts[0].id;
+    const { response, account } = await apiClient.getAccount(accountId);
 
     expect(response.status()).toBe(200);
-    expect(account.id).toBe(accounts[0].id);
-    expect(account.customerId).toBe(customer.id);
+    expect(account.id).toBe(accountId);
+    expect(account.customerId).toBe(apiSession.customer.id);
   });
 
-  test('creates a new account for the demo customer when funded', async ({ apiClient }) => {
-    const customer = await requireApiCustomer(apiClient);
-    const { accounts } = await apiClient.getAccounts(customer.id);
-    test.skip(accounts.length === 0, 'No funding account available');
-
-    const funding = [...accounts].sort((a, b) => b.balance - a.balance)[0];
-    test.skip(funding.balance < 100, 'Insufficient balance for createAccount');
+  test('creates a new account when funded', async ({ apiClient, apiSession }) => {
+    const funding = [...apiSession.accounts].sort((a, b) => b.balance - a.balance)[0];
+    expect(funding.balance, 'Funding account should be seeded for createAccount').toBeGreaterThanOrEqual(
+      100,
+    );
 
     const { response, account } = await apiClient.createAccount(
-      customer.id,
+      apiSession.customer.id,
       NewAccountType.Savings,
       funding.id,
     );
 
     expect(response.status(), 'createAccount should succeed').toBe(200);
     expect(account.id).toBeGreaterThan(0);
-    expect(account.customerId).toBe(customer.id);
+    expect(account.customerId).toBe(apiSession.customer.id);
+  });
+
+  test('shared demo login is optional when available', async ({ apiClient }) => {
+    const demo = TestDataFactory.sharedDemoCredentials();
+    const { response, customer } = await apiClient.login(demo.username, demo.password);
+    test.skip(
+      !response.ok() || !customer?.id,
+      `Shared john/demo unavailable (HTTP ${response.status()}); skipped by design`,
+    );
+
+    expect(customer!.firstName).toBeTruthy();
   });
 });

@@ -5,9 +5,8 @@ import type { Customer } from '../types/api.types';
 import { env } from './env';
 
 /**
- * Logs in via REST using dedicated env credentials when set, otherwise the shared
- * john/demo account. Skips the test when the public demo login is unavailable
- * (common HTTP 400 after host DB resets) so suites do not cascade-fail.
+ * Optional helper for specs that still want the shared demo / TEST_* login.
+ * Prefer the worker-scoped `apiSession` fixture for happy-path API coverage.
  */
 export async function requireApiCustomer(apiClient: ParaBankApiClient): Promise<Customer> {
   const candidates = [
@@ -31,7 +30,6 @@ export async function requireApiCustomer(apiClient: ParaBankApiClient): Promise<
     `API login unavailable (last HTTP ${lastStatus}). Public ParaBank demo may be reset or flaky.`,
   );
 
-  // Unreachable after skip; keeps TypeScript satisfied.
   throw new Error('API login unavailable');
 }
 
