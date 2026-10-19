@@ -1,22 +1,21 @@
 import { test, expect } from '../../../fixtures/test-fixtures';
 
-test.describe.configure({ mode: 'serial' });
-
 test.describe('Transfer funds', () => {
-  // Uses the shared demo account which already has multiple accounts.
-  // Avoids heavy registration under Cloudflare rate limits.
-
   test('transfers money between eligible accounts', async ({
-    demoAuthenticated,
+    authenticatedUser,
     transferFundsPage,
   }) => {
-    expect(demoAuthenticated.username).toBe('john');
+    expect(authenticatedUser.accountIds.length).toBeGreaterThanOrEqual(2);
+
     await transferFundsPage.goto();
     const accounts = await transferFundsPage.getAccountOptionValues();
-    test.skip(accounts.length < 2, 'Need at least two accounts to transfer between');
+    expect(accounts.length, 'Transfer page should list at least two accounts').toBeGreaterThanOrEqual(
+      2,
+    );
 
-    const fromAccountId = accounts[0];
-    const toAccountId = accounts.find((id) => id !== fromAccountId) ?? accounts[1];
+    const fromAccountId = authenticatedUser.accountIds[0];
+    const toAccountId =
+      authenticatedUser.accountIds.find((id) => id !== fromAccountId) ?? accounts[1];
     const amount = '10';
 
     await transferFundsPage.transfer(amount, fromAccountId, toAccountId);
@@ -24,10 +23,10 @@ test.describe('Transfer funds', () => {
   });
 
   test('requires an amount before transferring', async ({
-    demoAuthenticated,
+    authenticatedUser,
     transferFundsPage,
   }) => {
-    expect(demoAuthenticated.username).toBe('john');
+    expect(authenticatedUser.credentials.username).toBeTruthy();
     await transferFundsPage.goto();
     await transferFundsPage.waitForAccountsLoaded();
     await transferFundsPage.transferButton.click();
@@ -37,15 +36,16 @@ test.describe('Transfer funds', () => {
   });
 
   test('does not complete transfer for a non-numeric amount', async ({
-    demoAuthenticated,
+    authenticatedUser,
     transferFundsPage,
   }) => {
-    expect(demoAuthenticated.username).toBe('john');
+    expect(authenticatedUser.accountIds.length).toBeGreaterThanOrEqual(2);
     await transferFundsPage.goto();
-    const accounts = await transferFundsPage.getAccountOptionValues();
-    test.skip(accounts.length < 2, 'Need at least two accounts to exercise amount validation');
-
-    await transferFundsPage.transfer('abc', accounts[0], accounts[1]);
+    await transferFundsPage.transfer(
+      'abc',
+      authenticatedUser.accountIds[0],
+      authenticatedUser.accountIds[1],
+    );
     await expect(
       transferFundsPage.page.getByRole('heading', { name: 'Transfer Complete!' }),
     ).toHaveCount(0);

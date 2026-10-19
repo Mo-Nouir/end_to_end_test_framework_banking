@@ -38,22 +38,22 @@ export default defineConfig({
   projects: [
     {
       name: 'smoke',
-      testMatch: /tests\/smoke\/.*\.spec\.ts/,
+      grep: /@smoke/,
       use: { ...devices['Desktop Chrome'] },
     },
     {
       name: 'chromium',
-      testIgnore: /tests\/smoke\/.*\.spec\.ts/,
+      grepInvert: /@smoke|@quarantine/,
       use: { ...devices['Desktop Chrome'] },
     },
     {
       name: 'firefox',
-      testIgnore: /tests\/smoke\/.*\.spec\.ts/,
+      grepInvert: /@smoke|@quarantine/,
       use: { ...devices['Desktop Firefox'] },
     },
     {
       name: 'webkit',
-      testIgnore: /tests\/smoke\/.*\.spec\.ts/,
+      grepInvert: /@smoke|@quarantine/,
       use: { ...devices['Desktop Safari'] },
     },
   ],

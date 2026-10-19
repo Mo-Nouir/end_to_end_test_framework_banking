@@ -63,11 +63,16 @@ export class RegistrationPage extends BasePage {
   }
 
   async expectSuccessfulRegistration(username: string): Promise<void> {
+    // Prefer authenticated chrome over the form title — the demo can briefly keep
+    // "Signing up is easy!" visible while the POST is still processing.
+    await expect(
+      this.leftNav.logOut(),
+      'Successful registration should authenticate the user',
+    ).toBeVisible({ timeout: 30_000 });
     await expect(
       this.titleHeading(),
       'Registration success heading should include the new username',
-    ).toContainText(`Welcome ${username}`);
-    await this.expectLoggedIn();
+    ).toContainText(`Welcome ${username}`, { timeout: 15_000 });
   }
 
   async expectFieldErrors(): Promise<void> {

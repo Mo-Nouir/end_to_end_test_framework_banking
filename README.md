@@ -73,10 +73,10 @@ Copy `.env.example` to `.env` (never commit `.env`):
 | --- | --- | --- |
 | `BASE_URL` | UI base URL | ParaBank public UI |
 | `API_BASE_URL` | REST base URL | ParaBank `/services/bank` |
-| `TEST_USERNAME` / `TEST_PASSWORD` | Optional dedicated credentials | unset |
-| `WORKERS` | Playwright workers | local default / `2` in CI |
+| `TEST_USERNAME` / `TEST_PASSWORD` | Optional dedicated credentials for `authenticatedUser` | unset |
+| `WORKERS` | Playwright workers | **`1` by default and in CI** (public demo) |
 
-UI tests prefer **registering unique users** so they do not depend on a private shared account.
+UI mutation flows prefer **unique registered users** (or dedicated env credentials). The public `john` / `demo` account is reserved for read-oriented API smoke.
 
 ## NPM scripts
 
@@ -85,10 +85,11 @@ UI tests prefer **registering unique users** so they do not depend on a private 
 | `npm run test` | Full suite (all configured projects) |
 | `npm run test:ui` | UI tests only |
 | `npm run test:api` | API tests only |
-| `npm run test:smoke` | Smoke project only |
+| `npm run test:smoke` | Smoke project (`@smoke` tag) |
 | `npm run test:headed` | Headed browsers |
 | `npm run test:debug` | Playwright Inspector |
-| `npm run test:chromium` / `firefox` / `webkit` | Single browser |
+| `npm run test:chromium` / `firefox` / `webkit` | Full browser project (excludes `@smoke` / `@quarantine`) |
+| `npm run test:quarantine` | Tests tagged `@quarantine` only |
 | `npm run report` | Open last HTML report |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | `tsc --noEmit` |
@@ -143,12 +144,22 @@ Schemas are validated for critical fields (ids, balances, payee name) rather tha
 ## Test data strategy
 
 - `TestDataFactory` generates unique usernames and synthetic personal data.
-- Mutating UI flows register their own users to reduce cross-test collisions.
+- Mutating UI flows use `registeredUser` or `authenticatedUser` (unique registration, or `TEST_USERNAME` / `TEST_PASSWORD` when set).
+- `authenticatedUser` ensures **two accounts** via REST (`deposit` + `createAccount`) so transfer tests do not skip on missing accounts.
 - Parallel workers do not share a single mutable user.
-- The public `john` / `demo` account is used mainly for **read-oriented API smoke** and a small number of API mutation checks.
+- The public `john` / `demo` account is used for **read-oriented API smoke** only (and a small number of API mutation checks).
 - `cleanDB` / `initializeDB` exist on the API but are **not called** from this suite because they would disrupt other users of the shared demo.
 
 **Cleanup limitation:** ParaBank does not provide a safe per-run cleanup for public use. Tests are designed to be repeatable without resetting the database.
+
+## Tags and projects
+
+| Tag | Purpose |
+| --- | --- |
+| `@smoke` | Lean CI smoke suite (`npm run test:smoke`) |
+| `@quarantine` | Excluded from chromium/firefox/webkit full projects |
+
+Navigations go through a **Cloudflare 1015 guard** that fails fast with a clear message when the public demo rate-limits the runner.
 
 ## CI/CD
 
@@ -157,11 +168,11 @@ GitHub Actions workflow: `.github/workflows/playwright.yml`
 Pipeline strategy:
 
 1. **Lint + typecheck** on every push/PR
-2. **Smoke** on Chromium (fast feedback)
-3. **Full suite** on Chromium, Firefox, and WebKit after smoke passes
+2. **Smoke** on Chromium via `@smoke` tags (fast feedback)
+3. **Full suite** on Chromium, Firefox, and WebKit after smoke passes (excludes `@smoke` / `@quarantine`)
 4. HTML reports and failure artifacts uploaded
-5. `WORKERS=2` to limit load on the shared demo
-6. Optional `TEST_USERNAME` / `TEST_PASSWORD` via GitHub Secrets
+5. `WORKERS=1` to limit load / Cloudflare 1015 against the shared demo
+6. Optional `TEST_USERNAME` / `TEST_PASSWORD` via GitHub Secrets (used by `authenticatedUser`)
 
 Manual runs are supported via `workflow_dispatch`.
 
@@ -171,7 +182,7 @@ Manual runs are supported via `workflow_dispatch`.
 - Periodic host-side DB resets can invalidate assumptions mid-run.
 - Some pages are AJAX-driven (transfer, open account, bill pay, find transactions); tests wait on network-populated selects / result panels rather than fixed sleeps.
 - Form accessibility is limited (few proper labels); locators combine roles with stable `name` / `id` attributes verified against the live DOM.
-- Insufficient-funds behavior is not always deterministic on the shared instance; transfer tests skip when fewer than two funded accounts exist.
+- Insufficient-funds behavior is not always deterministic; transfer-ready users are prepared via API account setup when possible.
 - Do not treat demo credentials as secrets or exclusive test accounts.
 - Cloudflare may return **Error 1015 (rate limited)** under parallel load. Default `WORKERS=1`; avoid hammering the public host.
 - Relative navigation must not use a leading `/` with this base URL, or Playwright resolves to `https://parabank.parasoft.com/index.htm` (404) instead of `/parabank/index.htm`.
@@ -182,9 +193,9 @@ Manual runs are supported via `workflow_dispatch`.
 | --- | --- |
 | Timeouts loading account dropdowns | Demo may be slow/down; retry; check `BASE_URL` |
 | Registration “username already exists” | Factory collision is rare; re-run the test |
-| Transfer skipped | Newly registered user could not open a second account (balance/demo issue) |
+| Transfer setup fails on createAccount | Demo balance/API instability; retry later or set dedicated `TEST_*` creds |
 | API 500 / flaky responses | Shared demo instability; CI retries are enabled |
-| Cloudflare Error 1015 | Wait a few minutes; rerun with `WORKERS=1` |
+| Cloudflare Error 1015 | Wait a few minutes; rerun with `WORKERS=1` (guard fails fast with a clear message) |
 | Browsers missing | `npx playwright install` (add `--with-deps` on Linux) |
 | UI 404 on `/index.htm` | Ensure `BASE_URL` ends with `/parabank/` and navigations omit a leading `/` |
 
@@ -192,9 +203,9 @@ Manual runs are supported via `workflow_dispatch`.
 
 - Optional local ParaBank Docker target for stable, isolated runs
 - Auth storage state for faster suites against a private environment
-- Contract tests generated from OpenAPI
+- Contract tests / Zod schemas from OpenAPI
 - Allure or consolidated multi-browser dashboards
-- Soft tagging to quarantine demo-flaky mutation tests in CI
+- Accessibility smoke with axe
 
 ## License
 

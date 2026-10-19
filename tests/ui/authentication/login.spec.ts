@@ -1,20 +1,24 @@
 import { test, expect, TestDataFactory } from '../../../fixtures/test-fixtures';
 
 test.describe('Authentication', () => {
-  test('successful login with valid credentials @smoke', async ({ loginPage, registrationPage }) => {
-    // Prefer a uniquely registered user over the shared john/demo account.
-    const user = TestDataFactory.createUser();
-    await registrationPage.goto();
-    await registrationPage.register(user);
-    await registrationPage.expectSuccessfulRegistration(user.username);
-    await loginPage.logout();
+  test(
+    'successful login with valid credentials',
+    { tag: '@smoke' },
+    async ({ loginPage, registrationPage }) => {
+      // Prefer a uniquely registered user over the shared john/demo account.
+      const user = TestDataFactory.createUser();
+      await registrationPage.goto();
+      await registrationPage.register(user);
+      await registrationPage.expectSuccessfulRegistration(user.username);
+      await loginPage.logout();
 
-    await loginPage.goto();
-    await loginPage.loginExpectingSuccess({
-      username: user.username,
-      password: user.password,
-    });
-  });
+      await loginPage.goto();
+      await loginPage.loginExpectingSuccess({
+        username: user.username,
+        password: user.password,
+      });
+    },
+  );
 
   test('shows error for invalid username or password', async ({ loginPage }) => {
     await loginPage.goto();

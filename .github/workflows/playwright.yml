@@ -61,7 +61,7 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Run smoke suite
+      - name: Run smoke suite (@smoke)
         run: npm run test:smoke
         env:
           TEST_USERNAME: ${{ secrets.TEST_USERNAME }}

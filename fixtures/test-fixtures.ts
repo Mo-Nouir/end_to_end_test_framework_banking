@@ -9,6 +9,8 @@ import { FindTransactionsPage } from '../pages/FindTransactionsPage';
 import { TestDataFactory } from '../test-data/test-data.factory';
 import type { Credentials, UserRegistrationData } from '../types/user.types';
 import { NewAccountType } from '../types/api.types';
+import { env } from '../utils/env';
+import { withRateLimitGuard } from '../utils/rate-limit';
 
 type Pages = {
   loginPage: LoginPage;
@@ -20,22 +22,63 @@ type Pages = {
   apiClient: ParaBankApiClient;
 };
 
+type AuthenticatedUser = {
+  user: UserRegistrationData;
+  credentials: Credentials;
+  accountIds: string[];
+};
+
 type AuthFixtures = {
   /** Registers a unique user via UI and leaves the browser authenticated. */
   registeredUser: UserRegistrationData;
   /**
-   * Logs in as the public demo user (john/demo).
-   * Shared mutable state — use for multi-account flows; avoid exclusive assumptions.
+   * Read-oriented login as the public demo user (john/demo).
+   * Prefer `authenticatedUser` for UI mutation flows.
    */
   demoAuthenticated: Credentials;
-  /** Authenticated page for a freshly registered user; opens a second account when possible. */
-  authenticatedUser: {
-    user: UserRegistrationData;
-    credentials: Credentials;
-  };
+  /**
+   * Dedicated env credentials when set, otherwise a unique registered user.
+   * Ensures at least two accounts via REST setup for transfer scenarios.
+   */
+  authenticatedUser: AuthenticatedUser;
 };
 
+async function ensureTwoAccounts(
+  apiClient: ParaBankApiClient,
+  credentials: Credentials,
+): Promise<string[]> {
+  const { response: loginResponse, customer } = await apiClient.login(
+    credentials.username,
+    credentials.password,
+  );
+  expect(loginResponse.ok(), 'API login required for account setup').toBeTruthy();
+
+  let { accounts } = await apiClient.getAccounts(customer.id);
+  expect(accounts.length, 'Customer should have at least one account').toBeGreaterThan(0);
+
+  if (accounts.length < 2) {
+    const funding = [...accounts].sort((a, b) => b.balance - a.balance)[0];
+    if (funding.balance < 100) {
+      const deposit = await apiClient.deposit(funding.id, 500);
+      expect(deposit.response.ok(), 'Deposit should fund account creation').toBeTruthy();
+    }
+    const created = await apiClient.createAccount(
+      customer.id,
+      NewAccountType.Savings,
+      funding.id,
+    );
+    expect(created.response.ok(), 'createAccount should open a second account').toBeTruthy();
+    ({ accounts } = await apiClient.getAccounts(customer.id));
+  }
+
+  expect(accounts.length, 'Need at least two accounts for transfer-ready users').toBeGreaterThan(1);
+  return accounts.map((account) => String(account.id));
+}
+
 export const test = base.extend<Pages & AuthFixtures>({
+  page: async ({ page }, use) => {
+    await use(withRateLimitGuard(page));
+  },
   loginPage: async ({ page }, use) => {
     await use(new LoginPage(page));
   },
@@ -70,21 +113,29 @@ export const test = base.extend<Pages & AuthFixtures>({
     await loginPage.loginExpectingSuccess(credentials);
     await use(credentials);
   },
-  authenticatedUser: async ({ registrationPage, accountsPage }, use) => {
-    const user = TestDataFactory.createUser();
-    await registrationPage.goto();
-    await registrationPage.register(user);
-    await registrationPage.expectSuccessfulRegistration(user.username);
-    // Newly registered users typically start with one account; open a second for transfer scenarios.
-    try {
-      await accountsPage.openNewAccount('SAVINGS');
-    } catch {
-      // Some demo resets may leave insufficient funds; tests that need 2 accounts will assert explicitly.
+  authenticatedUser: async ({ loginPage, registrationPage, apiClient }, use) => {
+    let user: UserRegistrationData;
+    let credentials: Credentials;
+
+    if (env.testUsername && env.testPassword) {
+      credentials = { username: env.testUsername, password: env.testPassword };
+      user = {
+        ...TestDataFactory.createUser(),
+        username: credentials.username,
+        password: credentials.password,
+      };
+      await loginPage.goto();
+      await loginPage.loginExpectingSuccess(credentials);
+    } else {
+      user = TestDataFactory.createUser();
+      credentials = { username: user.username, password: user.password };
+      await registrationPage.goto();
+      await registrationPage.register(user);
+      await registrationPage.expectSuccessfulRegistration(user.username);
     }
-    await use({
-      user,
-      credentials: { username: user.username, password: user.password },
-    });
+
+    const accountIds = await ensureTwoAccounts(apiClient, credentials);
+    await use({ user, credentials, accountIds });
   },
 });
 
