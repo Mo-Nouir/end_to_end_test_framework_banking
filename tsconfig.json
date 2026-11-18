@@ -25,10 +25,6 @@
       "@test-data/*": ["test-data/*"]
     }
   },
-  "include": [
-    "**/*.ts",
-    "eslint.config.js",
-    "playwright.config.ts"
-  ],
+  "include": ["**/*.ts", "eslint.config.js", "playwright.config.ts"],
   "exclude": ["node_modules", "playwright-report", "test-results", "blob-report"]
 }

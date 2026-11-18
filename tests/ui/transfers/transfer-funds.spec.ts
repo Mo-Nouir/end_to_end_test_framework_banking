@@ -9,9 +9,10 @@ test.describe('Transfer funds', () => {
 
     await transferFundsPage.goto();
     const accounts = await transferFundsPage.getAccountOptionValues();
-    expect(accounts.length, 'Transfer page should list at least two accounts').toBeGreaterThanOrEqual(
-      2,
-    );
+    expect(
+      accounts.length,
+      'Transfer page should list at least two accounts',
+    ).toBeGreaterThanOrEqual(2);
 
     const fromAccountId = authenticatedUser.accountIds[0];
     const toAccountId =

@@ -18,7 +18,10 @@ export async function requireApiCustomer(apiClient: ParaBankApiClient): Promise<
 
   let lastStatus = 0;
   for (const credentials of candidates) {
-    const { response, customer } = await apiClient.login(credentials.username, credentials.password);
+    const { response, customer } = await apiClient.login(
+      credentials.username,
+      credentials.password,
+    );
     lastStatus = response.status();
     if (response.ok() && customer?.id) {
       return customer;

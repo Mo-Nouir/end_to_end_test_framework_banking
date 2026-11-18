@@ -59,7 +59,9 @@ type WorkerAuthFixtures = {
   apiSession: ApiSession;
 };
 
-async function registerUniqueUser(registrationPage: RegistrationPage): Promise<UserRegistrationData> {
+async function registerUniqueUser(
+  registrationPage: RegistrationPage,
+): Promise<UserRegistrationData> {
   let lastError: unknown;
   for (let attempt = 1; attempt <= 2; attempt++) {
     const user = TestDataFactory.createUser();
@@ -97,11 +99,7 @@ async function ensureTwoAccounts(
       const deposit = await apiClient.deposit(funding.id, 500);
       expect(deposit.response.ok(), 'Deposit should fund account creation').toBeTruthy();
     }
-    const created = await apiClient.createAccount(
-      customer.id,
-      NewAccountType.Savings,
-      funding.id,
-    );
+    const created = await apiClient.createAccount(customer.id, NewAccountType.Savings, funding.id);
     expect(created.response.ok(), 'createAccount should open a second account').toBeTruthy();
     ({ accounts } = await apiClient.getAccounts(customer.id));
   }

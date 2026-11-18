@@ -81,6 +81,8 @@ export class RegistrationPage extends BasePage {
   }
 
   async expectUsernameAlreadyExists(): Promise<void> {
-    await expect(this.page.locator('text=/already exists|This username already exists/i')).toBeVisible();
+    await expect(
+      this.page.locator('text=/already exists|This username already exists/i'),
+    ).toBeVisible();
   }
 }

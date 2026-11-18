@@ -46,6 +46,9 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Format check
+        run: npm run format:check
+
   smoke:
     name: Smoke tests (Chromium)
     runs-on: ubuntu-latest

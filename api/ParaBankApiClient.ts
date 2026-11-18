@@ -28,12 +28,17 @@ export class ParaBankApiClient {
     return JSON.parse(body) as T;
   }
 
-  async login(username: string, password: string): Promise<{ response: APIResponse; customer: Customer }> {
+  async login(
+    username: string,
+    password: string,
+  ): Promise<{ response: APIResponse; customer: Customer }> {
     logger.debug(`API login for username="${username}"`);
     const response = await this.request.get(this.url(`/login/${username}/${password}`), {
       headers: { Accept: 'application/json' },
     });
-    const customer = response.ok() ? await this.json<Customer>(response) : (undefined as unknown as Customer);
+    const customer = response.ok()
+      ? await this.json<Customer>(response)
+      : (undefined as unknown as Customer);
     return { response, customer };
   }
 
@@ -41,7 +46,12 @@ export class ParaBankApiClient {
     const response = await this.request.get(this.url(`/customers/${customerId}`), {
       headers: { Accept: 'application/json' },
     });
-    return { response, customer: response.ok() ? await this.json<Customer>(response) : (undefined as unknown as Customer) };
+    return {
+      response,
+      customer: response.ok()
+        ? await this.json<Customer>(response)
+        : (undefined as unknown as Customer),
+    };
   }
 
   async getAccounts(customerId: number): Promise<{ response: APIResponse; accounts: Account[] }> {
@@ -60,7 +70,9 @@ export class ParaBankApiClient {
     });
     return {
       response,
-      account: response.ok() ? await this.json<Account>(response) : (undefined as unknown as Account),
+      account: response.ok()
+        ? await this.json<Account>(response)
+        : (undefined as unknown as Account),
     };
   }
 
@@ -79,7 +91,9 @@ export class ParaBankApiClient {
     });
     return {
       response,
-      account: response.ok() ? await this.json<Account>(response) : (undefined as unknown as Account),
+      account: response.ok()
+        ? await this.json<Account>(response)
+        : (undefined as unknown as Account),
     };
   }
 
@@ -157,7 +171,9 @@ export class ParaBankApiClient {
     });
     return {
       response,
-      result: response.ok() ? await this.json<BillPayResult>(response) : (undefined as unknown as BillPayResult),
+      result: response.ok()
+        ? await this.json<BillPayResult>(response)
+        : (undefined as unknown as BillPayResult),
     };
   }
 }

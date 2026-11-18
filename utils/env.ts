@@ -15,8 +15,7 @@ export const env = {
     const value = optional('BASE_URL') ?? 'https://parabank.parasoft.com/parabank';
     return value.endsWith('/') ? value : `${value}/`;
   })(),
-  apiBaseUrl:
-    optional('API_BASE_URL') ?? 'https://parabank.parasoft.com/parabank/services/bank',
+  apiBaseUrl: optional('API_BASE_URL') ?? 'https://parabank.parasoft.com/parabank/services/bank',
   testUsername: optional('TEST_USERNAME'),
   testPassword: optional('TEST_PASSWORD'),
   isCI: !!process.env.CI,

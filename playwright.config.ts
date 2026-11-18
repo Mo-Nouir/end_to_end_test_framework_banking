@@ -24,10 +24,7 @@ export default defineConfig({
   // CI emits blob reports per shard/project so Jobs can merge Chromium+Firefox+WebKit (+ smoke).
   reporter: isCI
     ? [['list'], ['blob', { outputDir: 'blob-report' }]]
-    : [
-        ['list'],
-        ['html', { open: 'never', outputFolder: 'playwright-report' }],
-      ],
+    : [['list'], ['html', { open: 'never', outputFolder: 'playwright-report' }]],
   use: {
     baseURL,
     headless: true,

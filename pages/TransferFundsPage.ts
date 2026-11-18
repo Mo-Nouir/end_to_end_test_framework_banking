@@ -56,7 +56,11 @@ export class TransferFundsPage extends BasePage {
     await this.transferButton.click();
   }
 
-  async expectTransferComplete(amount: string, fromAccountId: string, toAccountId: string): Promise<void> {
+  async expectTransferComplete(
+    amount: string,
+    fromAccountId: string,
+    toAccountId: string,
+  ): Promise<void> {
     await expect(
       this.page.getByRole('heading', { name: 'Transfer Complete!' }),
       'Transfer confirmation heading should be visible',
@@ -68,8 +72,10 @@ export class TransferFundsPage extends BasePage {
 
   async getAccountOptionValues(): Promise<string[]> {
     await this.waitForAccountsLoaded();
-    return this.fromAccountSelect.locator('option').evaluateAll((options) =>
-      options.map((option) => (option as HTMLOptionElement).value).filter(Boolean),
-    );
+    return this.fromAccountSelect
+      .locator('option')
+      .evaluateAll((options) =>
+        options.map((option) => (option as HTMLOptionElement).value).filter(Boolean),
+      );
   }
 }

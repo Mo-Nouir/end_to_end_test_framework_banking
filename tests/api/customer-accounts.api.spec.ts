@@ -53,9 +53,10 @@ test.describe('API – customers and accounts', () => {
 
   test('creates a new account when funded', async ({ apiClient, apiSession }) => {
     const funding = [...apiSession.accounts].sort((a, b) => b.balance - a.balance)[0];
-    expect(funding.balance, 'Funding account should be seeded for createAccount').toBeGreaterThanOrEqual(
-      100,
-    );
+    expect(
+      funding.balance,
+      'Funding account should be seeded for createAccount',
+    ).toBeGreaterThanOrEqual(100);
 
     const { response, account } = await apiClient.createAccount(
       apiSession.customer.id,

@@ -59,7 +59,9 @@ export class AccountsPage extends BasePage {
 
   async openNewAccount(typeLabel: 'CHECKING' | 'SAVINGS' = 'SAVINGS'): Promise<string> {
     await this.gotoOpenAccount();
-    await expect(this.fromAccountSelect.locator('option').first()).toBeAttached({ timeout: 30_000 });
+    await expect(this.fromAccountSelect.locator('option').first()).toBeAttached({
+      timeout: 30_000,
+    });
     await this.accountTypeSelect.selectOption({ label: typeLabel });
     // Wait until AJAX populates funding account options
     await expect

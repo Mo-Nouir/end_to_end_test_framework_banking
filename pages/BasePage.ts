@@ -15,7 +15,10 @@ export abstract class BasePage {
   };
 
   async expectLoggedIn(): Promise<void> {
-    await expect(this.leftNav.logOut(), 'Log Out link should be visible when authenticated').toBeVisible();
+    await expect(
+      this.leftNav.logOut(),
+      'Log Out link should be visible when authenticated',
+    ).toBeVisible();
   }
 
   async expectLoggedOut(): Promise<void> {

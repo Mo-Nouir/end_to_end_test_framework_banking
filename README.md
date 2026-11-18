@@ -6,12 +6,12 @@ This project demonstrates maintainable QA engineering practices: Page Object Mod
 
 ## Application under test
 
-| Item | Value |
-| --- | --- |
-| App | ParaBank (Parasoft demo) |
-| UI base URL | `https://parabank.parasoft.com/parabank` |
-| REST API base | `https://parabank.parasoft.com/parabank/services/bank` |
-| OpenAPI | [api-docs](https://parabank.parasoft.com/parabank/api-docs/index.html) |
+| Item          | Value                                                                  |
+| ------------- | ---------------------------------------------------------------------- |
+| App           | ParaBank (Parasoft demo)                                               |
+| UI base URL   | `https://parabank.parasoft.com/parabank`                               |
+| REST API base | `https://parabank.parasoft.com/parabank/services/bank`                 |
+| OpenAPI       | [api-docs](https://parabank.parasoft.com/parabank/api-docs/index.html) |
 
 ParaBank is a **shared public demo**. Data is reset periodically by the host, credentials such as `john` / `demo` are not private, and there is no exclusive cleanup for your runs.
 
@@ -69,31 +69,31 @@ npx playwright install --with-deps
 
 Copy `.env.example` to `.env` (never commit `.env`):
 
-| Variable | Purpose | Default |
-| --- | --- | --- |
-| `BASE_URL` | UI base URL | ParaBank public UI |
-| `API_BASE_URL` | REST base URL | ParaBank `/services/bank` |
-| `TEST_USERNAME` / `TEST_PASSWORD` | Optional dedicated credentials for `authenticatedUser` | unset |
-| `WORKERS` | Playwright workers | **`1` by default and in CI** (public demo) |
+| Variable                          | Purpose                                                | Default                                    |
+| --------------------------------- | ------------------------------------------------------ | ------------------------------------------ |
+| `BASE_URL`                        | UI base URL                                            | ParaBank public UI                         |
+| `API_BASE_URL`                    | REST base URL                                          | ParaBank `/services/bank`                  |
+| `TEST_USERNAME` / `TEST_PASSWORD` | Optional dedicated credentials for `authenticatedUser` | unset                                      |
+| `WORKERS`                         | Playwright workers                                     | **`1` by default and in CI** (public demo) |
 
 UI mutation flows prefer **unique registered users** (or dedicated env credentials). The public `john` / `demo` account is reserved for read-oriented API smoke.
 
 ## NPM scripts
 
-| Script | Description |
-| --- | --- |
-| `npm run test` | Full suite (all configured projects) |
-| `npm run test:ui` | UI tests only |
-| `npm run test:api` | API tests only |
-| `npm run test:smoke` | Smoke project (`@smoke` tag) |
-| `npm run test:headed` | Headed browsers |
-| `npm run test:debug` | Playwright Inspector |
+| Script                                         | Description                                              |
+| ---------------------------------------------- | -------------------------------------------------------- |
+| `npm run test`                                 | Full suite (all configured projects)                     |
+| `npm run test:ui`                              | UI tests only                                            |
+| `npm run test:api`                             | API tests only                                           |
+| `npm run test:smoke`                           | Smoke project (`@smoke` tag)                             |
+| `npm run test:headed`                          | Headed browsers                                          |
+| `npm run test:debug`                           | Playwright Inspector                                     |
 | `npm run test:chromium` / `firefox` / `webkit` | Full browser project (excludes `@smoke` / `@quarantine`) |
-| `npm run test:quarantine` | Tests tagged `@quarantine` only |
-| `npm run report` | Open last HTML report |
-| `npm run lint` | ESLint |
-| `npm run typecheck` | `tsc --noEmit` |
-| `npm run format` | Prettier write |
+| `npm run test:quarantine`                      | Tests tagged `@quarantine` only                          |
+| `npm run report`                               | Open last HTML report                                    |
+| `npm run lint`                                 | ESLint                                                   |
+| `npm run typecheck`                            | `tsc --noEmit`                                           |
+| `npm run format`                               | Prettier write                                           |
 
 ## Reports and traces
 
@@ -154,9 +154,9 @@ Schemas are validated for critical fields (ids, balances, payee name) rather tha
 
 ## Tags and projects
 
-| Tag | Purpose |
-| --- | --- |
-| `@smoke` | Lean CI smoke suite (`npm run test:smoke`) |
+| Tag           | Purpose                                             |
+| ------------- | --------------------------------------------------- |
+| `@smoke`      | Lean CI smoke suite (`npm run test:smoke`)          |
 | `@quarantine` | Excluded from chromium/firefox/webkit full projects |
 
 Navigations go through a **Cloudflare 1015 guard** that fails fast with a clear message when the public demo rate-limits the runner.
@@ -204,15 +204,15 @@ The live site shows the **merged** Playwright HTML report from `main` (all brows
 
 ## Troubleshooting
 
-| Symptom | What to try |
-| --- | --- |
-| Timeouts loading account dropdowns | Demo may be slow/down; retry; check `BASE_URL` |
-| Registration “username already exists” | Factory collision is rare; re-run the test |
-| Transfer setup fails on createAccount | Demo balance/API instability; retry later or set dedicated `TEST_*` creds |
-| API 500 / flaky responses | Shared demo instability; CI retries are enabled |
-| Cloudflare Error 1015 | Wait a few minutes; rerun with `WORKERS=1` (guard fails fast with a clear message) |
-| Browsers missing | `npx playwright install` (add `--with-deps` on Linux) |
-| UI 404 on `/index.htm` | Ensure `BASE_URL` ends with `/parabank/` and navigations omit a leading `/` |
+| Symptom                                | What to try                                                                        |
+| -------------------------------------- | ---------------------------------------------------------------------------------- |
+| Timeouts loading account dropdowns     | Demo may be slow/down; retry; check `BASE_URL`                                     |
+| Registration “username already exists” | Factory collision is rare; re-run the test                                         |
+| Transfer setup fails on createAccount  | Demo balance/API instability; retry later or set dedicated `TEST_*` creds          |
+| API 500 / flaky responses              | Shared demo instability; CI retries are enabled                                    |
+| Cloudflare Error 1015                  | Wait a few minutes; rerun with `WORKERS=1` (guard fails fast with a clear message) |
+| Browsers missing                       | `npx playwright install` (add `--with-deps` on Linux)                              |
+| UI 404 on `/index.htm`                 | Ensure `BASE_URL` ends with `/parabank/` and navigations omit a leading `/`        |
 
 ## Future improvements
 
