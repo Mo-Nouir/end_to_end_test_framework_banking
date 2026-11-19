@@ -1,4 +1,5 @@
 import { test, expect, TestDataFactory } from '../../fixtures/test-fixtures';
+import { env } from '../../utils/env';
 
 test.describe('API – transfers, bill pay, and transactions', () => {
   test('transfers funds between two accounts', async ({ apiClient, apiSession }) => {
@@ -59,9 +60,7 @@ test.describe('API – transfers, bill pay, and transactions', () => {
   });
 
   test('transfer with missing params fails', async ({ request }) => {
-    const apiBase =
-      process.env.API_BASE_URL ?? 'https://parabank.parasoft.com/parabank/services/bank';
-    const response = await request.post(`${apiBase}/transfer`, {
+    const response = await request.post(`${env.apiBaseUrl}/transfer`, {
       headers: { Accept: 'application/json' },
     });
     expect(response.ok()).toBeFalsy();

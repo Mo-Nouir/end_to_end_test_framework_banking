@@ -1,13 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
-import dotenv from 'dotenv';
+import { env } from './utils/env';
 
-dotenv.config();
-
-// Trailing slash matters: goto('index.htm') resolves under /parabank/.
+// env.baseUrl always ends with a slash: goto('index.htm') resolves under /parabank/.
 // A leading slash in page.goto('/index.htm') would drop the /parabank path segment.
-const configuredBase = process.env.BASE_URL ?? 'https://parabank.parasoft.com/parabank';
-const baseURL = configuredBase.endsWith('/') ? configuredBase : `${configuredBase}/`;
-const isCI = !!process.env.CI;
+const baseURL = env.baseUrl;
+const isCI = env.isCI;
 // Default to 1 worker against the shared Cloudflare-fronted demo to reduce 1015 rate limits.
 const workers = process.env.WORKERS ? Number(process.env.WORKERS) : 1;
 
