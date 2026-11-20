@@ -178,35 +178,37 @@ export const test = base.extend<Pages & AuthFixtures, WorkerAuthFixtures>({
   apiSession: [
     async ({ playwright }, use) => {
       const requestContext = await playwright.request.newContext();
-      const apiClient = new ParaBankApiClient(requestContext);
-      let credentials: Credentials;
+      try {
+        const apiClient = new ParaBankApiClient(requestContext);
+        let credentials: Credentials;
 
-      if (env.testUsername && env.testPassword) {
-        credentials = { username: env.testUsername, password: env.testPassword };
-      } else {
-        // UI registration only needs a browser once per worker; Chromium is enough.
-        const browser = await playwright.chromium.launch();
-        const page = withRateLimitGuard(
-          await browser.newPage({
-            baseURL: env.baseUrl,
-          }),
+        if (env.testUsername && env.testPassword) {
+          credentials = { username: env.testUsername, password: env.testPassword };
+        } else {
+          // UI registration only needs a browser once per worker; Chromium is enough.
+          const browser = await playwright.chromium.launch();
+          try {
+            const page = withRateLimitGuard(await browser.newPage({ baseURL: env.baseUrl }));
+            const user = await registerUniqueUser(new RegistrationPage(page));
+            credentials = { username: user.username, password: user.password };
+          } finally {
+            await browser.close();
+          }
+        }
+
+        const accounts = await ensureTwoAccounts(apiClient, credentials);
+        const { response, customer } = await apiClient.login(
+          credentials.username,
+          credentials.password,
         );
-        const registrationPage = new RegistrationPage(page);
-        const user = await registerUniqueUser(registrationPage);
-        credentials = { username: user.username, password: user.password };
-        await browser.close();
+        expect(response.ok(), 'apiSession API login should succeed').toBeTruthy();
+        expect(customer?.id).toBeGreaterThan(0);
+
+        await use({ customer, credentials, accounts });
+      } finally {
+        // Dispose even when registration or account setup fails, so workers don't leak contexts.
+        await requestContext.dispose();
       }
-
-      const accounts = await ensureTwoAccounts(apiClient, credentials);
-      const { response, customer } = await apiClient.login(
-        credentials.username,
-        credentials.password,
-      );
-      expect(response.ok(), 'apiSession API login should succeed').toBeTruthy();
-      expect(customer?.id).toBeGreaterThan(0);
-
-      await use({ customer, credentials, accounts });
-      await requestContext.dispose();
     },
     { scope: 'worker' },
   ],
