@@ -123,8 +123,8 @@ jobs:
         # Chromium is always installed: apiSession registers users via Chromium even on Firefox/WebKit jobs.
         run: npx playwright install --with-deps chromium ${{ matrix.project != 'chromium' && matrix.project || '' }}
 
-      - name: Run full suite for ${{ matrix.project }}
-        run: npx playwright test --project=${{ matrix.project }}
+      - name: Run full suite for ${{ matrix.project }} (shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
+        run: npx playwright test --project=${{ matrix.project }} --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
         env:
           TEST_USERNAME: ${{ secrets.TEST_USERNAME }}
           TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
