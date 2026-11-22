@@ -6,7 +6,6 @@ test.describe('Find transactions', () => {
     billPaymentPage,
     findTransactionsPage,
   }) => {
-    expect(authenticatedUser.credentials.username).toBeTruthy();
     const amount = `${20 + (Date.now() % 70)}.${String(Date.now() % 90).padStart(2, '0')}`;
     const payee = TestDataFactory.createBillPayee({ amount });
     const fromAccountId = authenticatedUser.accountIds[0];
@@ -26,10 +25,9 @@ test.describe('Find transactions', () => {
   });
 
   test('shows validation when searching by empty transaction id', async ({
-    authenticatedUser,
+    authenticatedUser: _authenticatedUser,
     findTransactionsPage,
   }) => {
-    expect(authenticatedUser.credentials.username).toBeTruthy();
     await findTransactionsPage.goto();
     await findTransactionsPage.waitForAccountsLoaded();
     await findTransactionsPage.findByIdButton.click();
@@ -37,10 +35,9 @@ test.describe('Find transactions', () => {
   });
 
   test('handles invalid amount search input', async ({
-    authenticatedUser,
+    authenticatedUser: _authenticatedUser,
     findTransactionsPage,
   }) => {
-    expect(authenticatedUser.credentials.username).toBeTruthy();
     await findTransactionsPage.goto();
     await findTransactionsPage.findByAmount(TestDataFactory.invalidAmount());
     await findTransactionsPage.expectAmountError();

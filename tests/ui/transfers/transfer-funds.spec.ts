@@ -1,4 +1,4 @@
-import { test, expect } from '../../../fixtures/test-fixtures';
+import { test, expect, TestDataFactory } from '../../../fixtures/test-fixtures';
 
 test.describe('Transfer funds', () => {
   test('transfers money between eligible accounts', async ({
@@ -24,10 +24,9 @@ test.describe('Transfer funds', () => {
   });
 
   test('requires an amount before transferring', async ({
-    authenticatedUser,
+    authenticatedUser: _authenticatedUser,
     transferFundsPage,
   }) => {
-    expect(authenticatedUser.credentials.username).toBeTruthy();
     await transferFundsPage.goto();
     await transferFundsPage.waitForAccountsLoaded();
     await transferFundsPage.transferButton.click();
@@ -43,7 +42,7 @@ test.describe('Transfer funds', () => {
     expect(authenticatedUser.accountIds.length).toBeGreaterThanOrEqual(2);
     await transferFundsPage.goto();
     await transferFundsPage.transfer(
-      'abc',
+      TestDataFactory.invalidAmount(),
       authenticatedUser.accountIds[0],
       authenticatedUser.accountIds[1],
     );
