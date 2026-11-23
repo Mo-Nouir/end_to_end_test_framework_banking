@@ -1,4 +1,4 @@
-import { test, expect, TestDataFactory } from '../../../fixtures/test-fixtures';
+import { test, TestDataFactory } from '../../../fixtures/test-fixtures';
 
 test.describe('Bill payment', () => {
   test('submits a bill payment with valid data', async ({
@@ -29,8 +29,6 @@ test.describe('Bill payment', () => {
     await billPaymentPage.fillPayee(payee);
     await billPaymentPage.verifyAccount.fill('999999999');
     await billPaymentPage.sendPaymentButton.click();
-    await expect(
-      billPaymentPage.page.locator('#validationModel-verifyAccount-mismatch'),
-    ).toBeVisible();
+    await billPaymentPage.expectVerifyAccountMismatch();
   });
 });

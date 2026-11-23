@@ -72,4 +72,11 @@ export class BillPaymentPage extends BasePage {
     const validation = this.page.locator('[id^="validationModel-"]').filter({ hasText: /.+/ });
     await expect(validation.first(), 'Client-side validation should surface').toBeVisible();
   }
+
+  async expectVerifyAccountMismatch(): Promise<void> {
+    await expect(
+      this.page.locator('#validationModel-verifyAccount-mismatch'),
+      'Mismatched verify account number should show a validation error',
+    ).toBeVisible();
+  }
 }
