@@ -1,6 +1,8 @@
 import type { Page } from '@playwright/test';
 
 const RATE_LIMIT_PATTERN = /1015|rate limited|banned you temporarily/i;
+const RATE_LIMIT_MESSAGE =
+  'ParaBank Cloudflare rate limit detected (Error 1015). Wait a few minutes and retry with WORKERS=1.';
 
 /**
  * Fails fast when ParaBank's Cloudflare edge returns Error 1015,
@@ -9,9 +11,7 @@ const RATE_LIMIT_PATTERN = /1015|rate limited|banned you temporarily/i;
 export async function assertNotRateLimited(page: Page): Promise<void> {
   const title = await page.title().catch(() => '');
   if (RATE_LIMIT_PATTERN.test(title)) {
-    throw new Error(
-      'ParaBank Cloudflare rate limit detected (Error 1015). Wait a few minutes and retry with WORKERS=1.',
-    );
+    throw new Error(RATE_LIMIT_MESSAGE);
   }
 
   const body = page.locator('body');
@@ -21,9 +21,7 @@ export async function assertNotRateLimited(page: Page): Promise<void> {
 
   const text = await body.innerText().catch(() => '');
   if (RATE_LIMIT_PATTERN.test(text)) {
-    throw new Error(
-      'ParaBank Cloudflare rate limit detected (Error 1015). Wait a few minutes and retry with WORKERS=1.',
-    );
+    throw new Error(RATE_LIMIT_MESSAGE);
   }
 }
 
