@@ -34,7 +34,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version-file: '.nvmrc'
           cache: 'npm'
 
       - name: Install dependencies
@@ -62,7 +62,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version-file: '.nvmrc'
           cache: 'npm'
 
       - name: Install dependencies
@@ -109,7 +109,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version-file: '.nvmrc'
           cache: 'npm'
 
       - name: Install dependencies
@@ -117,11 +117,7 @@ jobs:
 
       - name: Install Playwright browsers
         # Chromium is always installed: apiSession registers users via Chromium even on Firefox/WebKit jobs.
-        run: |
-          npx playwright install --with-deps ${{ matrix.project }}
-          if [ "${{ matrix.project }}" != "chromium" ]; then
-            npx playwright install chromium
-          fi
+        run: npx playwright install --with-deps chromium ${{ matrix.project != 'chromium' && matrix.project || '' }}
 
       - name: Run full suite for ${{ matrix.project }}
         run: npx playwright test --project=${{ matrix.project }}
@@ -161,7 +157,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version-file: '.nvmrc'
           cache: 'npm'
 
       - name: Install dependencies

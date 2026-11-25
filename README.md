@@ -45,7 +45,7 @@ Tests stay focused on scenarios and assertions. Navigation, form interaction, an
 
 ## Prerequisites
 
-- Node.js 18+ (20 LTS recommended)
+- Node.js 20+ (22 LTS recommended, see `.nvmrc`)
 - npm 9+
 - Git
 
